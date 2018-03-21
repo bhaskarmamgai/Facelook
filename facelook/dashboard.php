@@ -162,6 +162,7 @@ p a {
   								while($row=mysqli_fetch_array($pquery,MYSQLI_ASSOC)){
   									?>
   									<p><?php echo $row['Text_post'] ?></p>
+  									<p><?php echo $row['Time'] ?></p>
   									<?php
   								}
   							}
