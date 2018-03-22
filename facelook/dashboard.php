@@ -1,13 +1,50 @@
 <?php
 session_start();
+if (!isset($_SESSION['uid'])){
+header('location:logsign.php');
+exit();
+}
 require 'dbconnect.php';
 
 $query=mysqli_query($link,"SELECT * FROM users WHERE Uid='".$_POST['uid']."' && Password='".$_POST['password']."'");
 //$pquery=mysqli_query($link,"SELECT * FROM user_post WHERE Uid='".$_POST['uid']);
  $pquery=mysqli_query($link,"SELECT * FROM user_post WHERE Uid='".$_SESSION['uid']."'");
+ //query for image
+  $ppquery=mysqli_query($link,"SELECT Profile_Pic FROM users WHERE Uid='".$_SESSION['uid']."'");
+
 
     $count=mysqli_num_rows($query);
     $countp=mysqli_num_rows($pquery);
+
+//Time in ago format function
+    function time_elapsed_string($datetime, $full = false) {
+    $now = new DateTime;
+    $ago = new DateTime($datetime);
+    $diff = $now->diff($ago);
+
+    $diff->w = floor($diff->d / 7);
+    $diff->d -= $diff->w * 7;
+
+    $string = array(
+        'y' => 'year',
+        'm' => 'month',
+        'w' => 'week',
+        'd' => 'day',
+        'h' => 'hour',
+        'i' => 'minute',
+        's' => 'second',
+    );
+    foreach ($string as $k => &$v) {
+        if ($diff->$k) {
+            $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+        } else {
+            unset($string[$k]);
+        }
+    }
+
+    if (!$full) $string = array_slice($string, 0, 1);
+    return $string ? implode(', ', $string) . ' ago' : 'just now';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -101,16 +138,17 @@ p a {
 		<div class="row">
 			<div class="col-md-5" style="border: 1px solid black;box-shadow: 3px 4px 48px 0px rgba(111,161,247,1);
 ">
-				<div class="profile">
-					<p><img src="images/testimonials.png" alt="userimage"></p>
+				<div class="profile"><!--user profile Image-->
+          <?php
+          $row=mysqli_fetch_array($ppquery,MYSQLI_ASSOC)
+            ?>
+					<p><?php echo "<img src='ppic/".$row['Profile_Pic']."' height = '130px' width = '130px'>";?></p>
 				</div>
 				<div class="upload-button" align="center">
-					<form>
-  						<label for="file-upload" class="custom-file-upload">
-    						<i class="fa fa-cloud-upload"></i> Upload Image
-  						</label>
-  						<input id="file-upload" name='upload_cont_img' type="file" style="display:none;">
-					</form>
+          <form method="post" action="uploadphoto.php" enctype='multipart/form-data'>
+             <input type='file' name='file' value="Select" />
+            <input type='submit' value='Upload' name='but_upload'>
+          </form>
 				</div>
 				<div class="user-deatils">
 					<form>
@@ -162,7 +200,7 @@ p a {
   								while($row=mysqli_fetch_array($pquery,MYSQLI_ASSOC)){
   									?>
   									<p><?php echo $row['Text_post'] ?></p>
-  									<p><?php echo $row['Time'] ?></p>
+  									<p><?php echo time_elapsed_string($row['Time']) ?></p>
   									<?php
   								}
   							}
